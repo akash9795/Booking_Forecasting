@@ -12,9 +12,7 @@ models/
 mlruns/
 *.pkl
 
-# Data
-data/
-!data/RawData.csv
+
 
 # OS files
 .DS_Store
