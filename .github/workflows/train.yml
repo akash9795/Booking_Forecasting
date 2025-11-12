@@ -3,8 +3,7 @@ name: Train Model Workflow
 on:
   push:
     paths:
-      - 'data/RawData*.csv'
-  workflow_dispatch:
+      - 'data/Rawdata*.csv' 
 
 jobs:
   train:
@@ -27,14 +26,12 @@ jobs:
       - name: Run training script
         run: python src/train_model.py
 
+      # Debug: List models to confirm they exist before upload
+      - name: List saved models
+        run: ls -l models/
+
       - name: Upload trained models
         uses: actions/upload-artifact@v4
         with:
           name: trained-models
           path: models/*.pkl
-
-      - name: Upload MLflow logs
-        uses: actions/upload-artifact@v4
-        with:
-          name: mlflow-logs
-          path: mlruns/

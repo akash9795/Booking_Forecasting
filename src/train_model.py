@@ -12,7 +12,7 @@ import mlflow.sklearn
 import os
 import glob
 
-# Create required folders
+# --- STEP 0: Create required folders ---
 os.makedirs("logs", exist_ok=True)
 os.makedirs("models", exist_ok=True)
 os.makedirs("mlruns", exist_ok=True)
@@ -36,9 +36,12 @@ try:
     logging.info("Training started")
 
     # --- STEP 1: Pick the latest data file ---
-    all_files = glob.glob("data/Rawdata*.csv")  # match versioned files
+    all_files = glob.glob("data/Rawdata*.csv")
+    if not all_files:
+        raise FileNotFoundError("No data files found in 'data/' folder!")
     latest_file = max(all_files, key=os.path.getmtime)
     logging.info(f"Using data file: {latest_file}")
+    print(f"Using data file: {latest_file}")
 
     # Load data
     data = pd.read_csv(latest_file)
@@ -90,15 +93,29 @@ try:
 
             # Save model with timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            model_path = f"models/{model_name}_model_{timestamp}.pkl"
+            model_filename = f"{model_name}_model_{timestamp}.pkl"
+            model_path = os.path.join("models", model_filename)
             joblib.dump(model, model_path)
+            print(f"Saved model: {model_path}")
+            logging.info(f"Saved model: {model_path}")
+
+            # Log model as MLflow artifact
             mlflow.log_artifact(model_path)
 
-            logging.info(f"{model_name} completed. Average MSE = {avg_mse:.4f}")
+    # --- Debug: List all saved models ---
+    saved_models = os.listdir("models")
+    logging.info(f"All saved models: {saved_models}")
+    print("Models saved in 'models/' folder:", saved_models)
+
+    if not saved_models:
+        raise FileNotFoundError("No models were saved! GitHub Actions artifact upload will fail.")
 
     # Select best model
     best_model_name = min(results, key=results.get)
     logging.info(f"Best model: {best_model_name} with MSE = {results[best_model_name]:.4f}")
-    
+    print(f"Best model: {best_model_name} with MSE = {results[best_model_name]:.4f}")
+
 except Exception as e:
     logging.exception(f"Error during training: {e}")
+    print(f"Error during training: {e}")
+    raise
