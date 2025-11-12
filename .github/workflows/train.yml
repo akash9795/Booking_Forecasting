@@ -3,7 +3,7 @@ name: Train Model Workflow
 on:
   push:
     paths:
-      - 'data/Rawdata*.csv' 
+      - 'data/RawData*.csv' 
 
 jobs:
   train:
