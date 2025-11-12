@@ -36,7 +36,7 @@ try:
     logging.info("Training started")
 
     # --- STEP 1: Pick the latest data file ---
-    all_files = glob.glob("data/Rawdata*.csv")
+    all_files = glob.glob("data/RawData*.csv")
     if not all_files:
         raise FileNotFoundError("No data files found in 'data/' folder!")
     latest_file = max(all_files, key=os.path.getmtime)
