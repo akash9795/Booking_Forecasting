@@ -10,6 +10,7 @@ import joblib
 import mlflow
 import mlflow.sklearn
 import os
+import glob
 
 # Create required folders
 os.makedirs("logs", exist_ok=True)
@@ -34,12 +35,17 @@ mlflow.set_experiment(experiment_name)
 try:
     logging.info("Training started")
 
+    # --- STEP 1: Pick the latest data file ---
+    all_files = glob.glob("data/Rawdata*.csv")  # match versioned files
+    latest_file = max(all_files, key=os.path.getmtime)
+    logging.info(f"Using data file: {latest_file}")
+
     # Load data
-    data = pd.read_csv("data/RawData.csv")  # Update path if needed
+    data = pd.read_csv(latest_file)
     logging.info(f"Data loaded successfully, shape={data.shape}")
 
     # Preprocess date features
-    data['OnRentDate'] = pd.to_datetime(data['OnRentDate'], format='mixed')
+    data['OnRentDate'] = pd.to_datetime(data['OnRentDate'], errors='coerce')
     data = data.sort_values(by='OnRentDate')
     data['day'] = data['OnRentDate'].dt.day
     data['month'] = data['OnRentDate'].dt.month
@@ -82,8 +88,9 @@ try:
             mlflow.log_param("model_name", model_name)
             mlflow.log_metric("avg_mse", avg_mse)
 
-            # Save model
-            model_path = f"models/{model_name}_model.pkl"
+            # Save model with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            model_path = f"models/{model_name}_model_{timestamp}.pkl"
             joblib.dump(model, model_path)
             mlflow.log_artifact(model_path)
 
@@ -92,7 +99,6 @@ try:
     # Select best model
     best_model_name = min(results, key=results.get)
     logging.info(f"Best model: {best_model_name} with MSE = {results[best_model_name]:.4f}")
-   # print(f"Best model: {best_model_name} with MSE = {results[best_model_name]:.4f}")
-
+    
 except Exception as e:
     logging.exception(f"Error during training: {e}")
