@@ -1,0 +1,8 @@
+# Core Python dependencies
+pandas
+numpy
+scikit-learn
+joblib
+
+# Experiment tracking
+mlflow
